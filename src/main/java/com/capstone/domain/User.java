@@ -51,7 +51,22 @@ public class User {
     }
 
     public void addFaceImage(String imageName,String imagePath,ImageAngleType angleType) {
+        boolean exists = userImages.stream().anyMatch(i -> i.getImageAngleType() == angleType);
 
+        if(exists)
+            throw new IllegalStateException("[ERROR] 이미 등록된 앵글입니다: "+angleType);
+
+        Image image = new Image();
+        image.setInfo(imageName,imagePath,angleType,this);
+        userImages.add(image);
+    }
+    public void changeFaceImage(String imageName,String imagePath,ImageAngleType angleType) {
+        Image image = userImages.stream().filter(i -> i.getImageAngleType() == angleType).findAny()
+                .orElseThrow(() -> new IllegalStateException("[ERROR] 해당 타입에 해당하는 앵글이 등록되있지 않습니다: " + angleType));
+        boolean removeSuccess = userImages.remove(image);
+        if(!removeSuccess)
+            throw new IllegalStateException("[ERROR] 이미지 삭제에 실패했습니다.");
+        addFaceImage(imageName,imagePath,angleType);
     }
 
 }

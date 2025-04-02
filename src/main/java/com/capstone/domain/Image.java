@@ -28,9 +28,11 @@ public class Image {
     @Column(nullable = false)
     private String imageName;
 
+    void setInfo(String name, String path, ImageAngleType angle, User user) {
+        this.imageName = name;
+        this.imagePath = path;
+        this.imageAngleType = angle;
+        this.user = user;
+    }
 
-//    public static Image of(String imagePath,String imageName,ImageAngleType angleType) {
-//        Image image = new Image();
-//        image.u
-//    }
 }
