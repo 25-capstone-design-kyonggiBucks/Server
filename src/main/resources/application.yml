@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: 2025capstone
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/capstone?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul
+    username: root
+    password: 0IzRxaAlqqxNCYg
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+security:
+  jwt:
+    token:
+      secret-key: authlakdjfalskdfjlaksdfjlkasdnfalskdfnlakqwiuerbwqieufbasidubf
+      expire-length : 7200
