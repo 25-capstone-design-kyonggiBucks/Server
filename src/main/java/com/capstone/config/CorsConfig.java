@@ -15,7 +15,7 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:8080")); // 프론트 엔드 도메인 주소
+        config.setAllowedOrigins(List.of("http://localhost:8080","http://localhost:3030")); // 프론트 엔드 도메인 주소
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With")); // 허용할 헤더
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")); // 허용할 HTTP 메서드
 

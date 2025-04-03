@@ -10,8 +10,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-@Entity(name = "user")
+@Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
@@ -20,7 +21,7 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(unique = true,nullable = false)
+    @Column(name = "login_id", unique = true,nullable = false)
     private String loginId;
 
     @Column(nullable = false)
@@ -32,6 +33,9 @@ public class User {
 
     @OneToMany(mappedBy = "user",fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Image> userImages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<Video> videos = new ArrayList<>();
 
 
     public static User of(UserDto userDto) {
@@ -68,5 +72,20 @@ public class User {
             throw new IllegalStateException("[ERROR] 이미지 삭제에 실패했습니다.");
         addFaceImage(imageName,imagePath,angleType);
     }
+
+    /*
+    * 사용자 custom 동영상은 동화당 최대 1개씩 저장할 수 있다.
+    * */
+//    public void addCustomVideo(Book book,Video customVideo) {
+//        Optional<Video> existCustomVideo = videos.stream().filter(v -> v.getBook().getBookId().equals(book.getBookId())).findAny();
+//
+//        if(existCustomVideo.isPresent()) {
+//            videos.remove(existCustomVideo.get());
+//            throw new IllegalStateException("[ERROR] 기존의 custom video 삭제에 실패했습니다.");
+//        }
+//        customVideo.setUser(this);
+//        videos.add(customVideo);
+//    }
+
 
 }
