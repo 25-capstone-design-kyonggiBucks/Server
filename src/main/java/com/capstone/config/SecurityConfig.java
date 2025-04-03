@@ -44,10 +44,18 @@ public class SecurityConfig {
                 .sessionManagement(session ->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint).accessDeniedHandler(jwtAccessDeniedHandler));
         http.authorizeHttpRequests( c-> {
-            c.requestMatchers("/api/user",
+            c.requestMatchers(
+                    "/",
+                    "/*.html",
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/uploads/**",
+                    "/api/user",
                     "/api/user/token",
                     "/api/user/login",
                     "/api/user/exists/**").permitAll()
+                    .requestMatchers("/api/user/images/**").authenticated()
                     .anyRequest().authenticated();
         });
         return http.build();
