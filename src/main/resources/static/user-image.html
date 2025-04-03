@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 이미지 관리</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            display: block;
+            margin-bottom: 10px;
+        }
+        select {
+            padding: 8px;
+            width: 200px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            min-height: 100px;
+        }
+        .image-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .image-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            width: 200px;
+        }
+        .image-card img {
+            max-width: 100%;
+            height: auto;
+        }
+        #loginSection {
+            margin-bottom: 30px;
+        }
+        .token-info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>사용자 이미지 관리</h1>
+    
+    <div id="loginSection" class="section">
+        <h2>로그인</h2>
+        <div class="form-group">
+            <label for="loginId">아이디:</label>
+            <input type="text" id="loginId" name="loginId">
+        </div>
+        <div class="form-group">
+            <label for="password">비밀번호:</label>
+            <input type="password" id="password" name="password">
+        </div>
+        <button id="loginBtn">로그인</button>
+        <div class="token-info" id="tokenInfo"></div>
+    </div>
+    
+    <div class="section">
+        <h2>이미지 업로드</h2>
+        <div class="form-group">
+            <label for="uploadImage">이미지 선택:</label>
+            <input type="file" id="uploadImage" name="image" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="uploadAngle">각도 선택:</label>
+            <select id="uploadAngle" name="angleType">
+                <option value="LEFT">좌측(LEFT)</option>
+                <option value="FRONT">정면(FRONT)</option>
+                <option value="RIGHT">우측(RIGHT)</option>
+            </select>
+        </div>
+        <button id="uploadBtn">업로드</button>
+    </div>
+    
+    <div class="section">
+        <h2>이미지 수정</h2>
+        <div class="form-group">
+            <label for="updateImage">새 이미지 선택:</label>
+            <input type="file" id="updateImage" name="image" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="updateAngle">각도 선택:</label>
+            <select id="updateAngle" name="angleType">
+                <option value="LEFT">좌측(LEFT)</option>
+                <option value="FRONT">정면(FRONT)</option>
+                <option value="RIGHT">우측(RIGHT)</option>
+            </select>
+        </div>
+        <button id="updateBtn">수정</button>
+    </div>
+    
+    <div class="section">
+        <h2>이미지 삭제</h2>
+        <div class="form-group">
+            <label for="deleteAngle">각도 선택:</label>
+            <select id="deleteAngle" name="angleType">
+                <option value="LEFT">좌측(LEFT)</option>
+                <option value="FRONT">정면(FRONT)</option>
+                <option value="RIGHT">우측(RIGHT)</option>
+            </select>
+        </div>
+        <button id="deleteBtn">삭제</button>
+    </div>
+    
+    <div class="section">
+        <h2>이미지 조회</h2>
+        <button id="getImagesBtn">이미지 조회</button>
+        <div class="image-container" id="imageContainer"></div>
+    </div>
+    
+    <div id="results">
+        <h3>결과:</h3>
+        <pre id="resultContent"></pre>
+    </div>
+    
+    <script>
+        let token = '';
+        
+        // 로그인
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const loginId = document.getElementById('loginId').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/user/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ loginId, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    token = data.data.accessToken;
+                    document.getElementById('tokenInfo').textContent = `로그인 성공! 토큰: ${token.substring(0, 15)}...`;
+                    showResult('로그인 성공', data);
+                } else {
+                    showResult('로그인 실패', data);
+                }
+            } catch (error) {
+                showResult('로그인 중 오류 발생', error);
+            }
+        });
+        
+        // 이미지 업로드
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            if (!token) {
+                alert('로그인이 필요합니다');
+                return;
+            }
+            
+            const imageFile = document.getElementById('uploadImage').files[0];
+            const angleType = document.getElementById('uploadAngle').value;
+            
+            if (!imageFile) {
+                alert('이미지를 선택해주세요');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', imageFile);
+            formData.append('angleType', angleType);
+            
+            try {
+                const response = await fetch('/api/user/images', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('이미지 업로드 성공', data);
+                } else {
+                    showResult('이미지 업로드 실패', data);
+                }
+            } catch (error) {
+                showResult('이미지 업로드 중 오류 발생', error);
+            }
+        });
+        
+        // 이미지 수정
+        document.getElementById('updateBtn').addEventListener('click', async () => {
+            if (!token) {
+                alert('로그인이 필요합니다');
+                return;
+            }
+            
+            const imageFile = document.getElementById('updateImage').files[0];
+            const angleType = document.getElementById('updateAngle').value;
+            
+            if (!imageFile) {
+                alert('이미지를 선택해주세요');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', imageFile);
+            formData.append('angleType', angleType);
+            
+            try {
+                const response = await fetch('/api/user/images', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('이미지 수정 성공', data);
+                } else {
+                    showResult('이미지 수정 실패', data);
+                }
+            } catch (error) {
+                showResult('이미지 수정 중 오류 발생', error);
+            }
+        });
+        
+        // 이미지 삭제
+        document.getElementById('deleteBtn').addEventListener('click', async () => {
+            if (!token) {
+                alert('로그인이 필요합니다');
+                return;
+            }
+            
+            const angleType = document.getElementById('deleteAngle').value;
+            
+            try {
+                const response = await fetch(`/api/user/images?angleType=${angleType}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('이미지 삭제 성공', data);
+                } else {
+                    showResult('이미지 삭제 실패', data);
+                }
+            } catch (error) {
+                showResult('이미지 삭제 중 오류 발생', error);
+            }
+        });
+        
+        // 이미지 조회
+        document.getElementById('getImagesBtn').addEventListener('click', async () => {
+            if (!token) {
+                alert('로그인이 필요합니다');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/user/images', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('이미지 조회 성공', data);
+                    displayImages(data.data);
+                } else {
+                    showResult('이미지 조회 실패', data);
+                }
+            } catch (error) {
+                showResult('이미지 조회 중 오류 발생', error);
+            }
+        });
+        
+        // 결과 표시
+        function showResult(title, data) {
+            const resultContent = document.getElementById('resultContent');
+            resultContent.textContent = `${title}\n${JSON.stringify(data, null, 2)}`;
+        }
+        
+        // 이미지 표시
+        function displayImages(images) {
+            const container = document.getElementById('imageContainer');
+            container.innerHTML = '';
+            
+            if (!images || images.length === 0) {
+                container.innerHTML = '<p>등록된 이미지가 없습니다.</p>';
+                return;
+            }
+            
+            images.forEach(image => {
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                
+                const img = document.createElement('img');
+                img.src = image.imagePath;
+                img.alt = `${image.angleType} 이미지`;
+                
+                const info = document.createElement('div');
+                info.innerHTML = `<strong>각도:</strong> ${image.angleType}<br>
+                                <strong>ID:</strong> ${image.imageId}<br>
+                                <strong>이름:</strong> ${image.imageName}`;
+                
+                card.appendChild(img);
+                card.appendChild(info);
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html> 
