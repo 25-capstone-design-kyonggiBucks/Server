@@ -24,6 +24,10 @@ public class Video {
     @JoinColumn(name = "book_id")
     private Book book;
 
+    @Enumerated(value = EnumType.STRING)
+    @Column
+    private VideoType videoType;
+
     @Column(nullable = false)
     private String videoPath;
 
@@ -32,15 +36,16 @@ public class Video {
 
 
     public static Video of(Book book,String videoPath,String videoName) {
-        return Video.of(book,null,videoPath,videoName);
+        return Video.of(book,null,videoPath,videoName,VideoType.DEFAULT);
     }
 
-    private static Video of(Book book,User user, String videoPath,String videoName) {
+    private static Video of(Book book,User user, String videoPath,String videoName,VideoType videoType) {
         Video video = new Video();
         video.book = book;
         video.user = user;
         video.videoPath = videoPath;
         video.videoName = videoName;
+        video.videoType = videoType;
         return video;
     }
     public void setUser(User user) {

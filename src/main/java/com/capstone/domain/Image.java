@@ -22,6 +22,10 @@ public class Image {
     @Column
     private ImageAngleType imageAngleType;
 
+    @Enumerated(value = EnumType.STRING)
+    @Column
+    private FacialExpression facialExpression;
+
     @Column(nullable = false)
     private String imagePath;
 
@@ -34,5 +38,4 @@ public class Image {
         this.imageAngleType = angle;
         this.user = user;
     }
-
 }
