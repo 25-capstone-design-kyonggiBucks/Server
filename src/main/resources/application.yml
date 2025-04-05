@@ -6,7 +6,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/capstone?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul
     username: root # 나중에 실제 환경에서 변경해주시면 됩니다.
-    password: 1234 # 나중에 실제 환경에서 변경해주시면 됩니다.
+    password: 0IzRxaAlqqxNCYg # 나중에 실제 환경에서 변경해주시면 됩니다.
 
   jpa:
     show-sql: true
@@ -39,4 +39,6 @@ security:
 
 app:
   upload:
-    dir: C:/uploads/images #이미지 업로드 경로 나중에 실제 환경에서 변경해주시면 됩니다.
+    dir: /Users/byeonjuhyeong/Desktop
+    image : /Users/byeonjuhyeong/Desktop/uploads/images
+

@@ -10,20 +10,27 @@ import java.nio.file.Paths;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
-    
-    @Value("${app.upload.dir:${user.home}/uploads/images}")
+
+    @Value("${app.upload.dir:${user.home}}")
     private String uploadDir;
-    
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 업로드된 이미지 파일에 접근하기 위한 리소스 핸들러
-        Path uploadPath = Paths.get(uploadDir);
-        String uploadAbsolutePath = uploadPath.toFile().getAbsolutePath();
-        
-        System.out.println("Upload directory path: " + uploadAbsolutePath);
-        
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:///" + uploadAbsolutePath + "/") // Windows는 file:/// 형식으로 경로 지정
-                .setCachePeriod(0); // 캐싱 비활성화
+        Path imageUploadPath = Paths.get(uploadDir, "uploads", "images");
+        Path videoUploadPath = Paths.get(uploadDir, "uploads", "videos");
+
+        String imageResourcePath = imageUploadPath.toUri().toString();
+        String videoResourcePath = videoUploadPath.toUri().toString();
+
+        System.out.println("이미지 경로: " + imageResourcePath);
+        System.out.println("영상 경로: " + videoResourcePath);
+
+        registry.addResourceHandler("/uploads/images/**")
+                .addResourceLocations(imageResourcePath)
+                .setCachePeriod(0); // 캐시 안 함
+
+        registry.addResourceHandler("/uploads/videos/**")
+                .addResourceLocations(videoResourcePath)
+                .setCachePeriod(0);
     }
 } 

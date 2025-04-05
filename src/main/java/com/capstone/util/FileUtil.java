@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,8 +12,8 @@ import java.nio.file.Paths;
 @Component
 public class FileUtil {
 
-    @Value("${app.upload.dir:${user.home}/uploads/images}")
-    private String uploadDir;
+    @Value("${app.upload.image:${user.home}/uploads/images}")
+    private String imageUploadDir;
 
     /**
      * 이미지 파일을 저장합니다.
@@ -26,7 +25,7 @@ public class FileUtil {
      */
     public String saveImage(MultipartFile file, String fileName) throws IOException {
         // 저장 경로 생성
-        Path uploadPath = Paths.get(uploadDir);
+        Path uploadPath = Paths.get(imageUploadDir);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
@@ -36,7 +35,7 @@ public class FileUtil {
         file.transferTo(filePath.toFile());
 
         // 웹에서 접근 가능한 경로 리턴
-        return "/uploads/" + fileName;
+        return "/uploads/images/" + fileName;
     }
 
     /**
@@ -47,7 +46,7 @@ public class FileUtil {
      */
     public void deleteImage(String webPath) throws IOException {
         String fileName = webPath.substring(webPath.lastIndexOf("/") + 1);
-        Path filePath = Paths.get(uploadDir).resolve(fileName);
+        Path filePath = Paths.get(imageUploadDir).resolve(fileName);
         
         if (Files.exists(filePath)) {
             Files.delete(filePath);
