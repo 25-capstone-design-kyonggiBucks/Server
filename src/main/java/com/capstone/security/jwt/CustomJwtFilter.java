@@ -32,6 +32,8 @@ public class CustomJwtFilter extends OncePerRequestFilter {
             Authentication authentication = tokenProvider.getAuthentication(jwt);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+        System.out.println("RequestURI: " + request.getRequestURI());
+        System.out.println("Authorization: " + request.getHeader("Authorization"));
         filterChain.doFilter(request,response);
     }
 

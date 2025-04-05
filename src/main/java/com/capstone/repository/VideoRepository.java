@@ -1,7 +1,5 @@
 package com.capstone.repository;
 
-import com.capstone.domain.Book;
-import com.capstone.domain.User;
 import com.capstone.domain.Video;
 import com.capstone.domain.VideoType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,15 +16,16 @@ public interface VideoRepository extends JpaRepository<Video,Long> {
 
     @Query("""
     SELECT v FROM Video v
-    JOIN FETCH v.book
-    WHERE v.user = :user
+    WHERE v.book.bookId = :bookId 
+      AND v.videoType = :type 
+      AND v.user.userId = :userId
 """)
-    List<Video> findAllByUserWithBook(@Param("user") User user);
+    Optional<Video> findCustomVideo(@Param("userId") Long userId,@Param("bookId") Long bookId,@Param("type") VideoType type);
 
     @Query("""
     SELECT v FROM Video v
-    WHERE v.book = :book AND v.videoType = :type
+    WHERE v.book.bookId = :bookId AND v.videoType = :type
 """)
-    Optional<Video> findDefaultVideoByBook(@Param("book") Book book, @Param("type") VideoType type);
+    Optional<Video> findDefaultVideo(@Param("bookId") Long bookId, @Param("type") VideoType type);
 
 }

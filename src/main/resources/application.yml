@@ -41,4 +41,5 @@ app:
   upload:
     dir: /Users/byeonjuhyeong/Desktop
     image : /Users/byeonjuhyeong/Desktop/uploads/images
+    video : /Users/byeonjuhyeong/Desktop/uploads/videos
 
