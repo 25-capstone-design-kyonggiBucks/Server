@@ -44,6 +44,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-right: 5px;
         }
         button:hover {
             background-color: #45a049;
@@ -79,6 +80,36 @@
             font-size: 12px;
             color: #666;
         }
+        #camera-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #camera-view {
+            width: 100%;
+            max-width: 500px;
+            max-height: 70vh;
+        }
+        #camera-buttons {
+            margin-top: 15px;
+        }
+        #canvas {
+            display: none;
+        }
+        .preview-image {
+            max-width: 150px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -102,44 +133,54 @@
         <h2>이미지 업로드</h2>
         <div class="form-group">
             <label for="uploadImage">이미지 선택:</label>
-            <input type="file" id="uploadImage" name="image" accept="image/*">
+            <input type="file" id="uploadImage" name="image" accept="image/*" capture="user">
+            <img id="uploadPreview" class="preview-image">
         </div>
         <div class="form-group">
-            <label for="uploadAngle">각도 선택:</label>
-            <select id="uploadAngle" name="angleType">
-                <option value="LEFT">좌측(LEFT)</option>
-                <option value="FRONT">정면(FRONT)</option>
-                <option value="RIGHT">우측(RIGHT)</option>
+            <label for="uploadExpression">표정 선택:</label>
+            <select id="uploadExpression" name="expression">
+                <option value="NEUTRAL">기본 얼굴(NEUTRAL)</option>
+                <option value="HAPPY">웃는 얼굴(HAPPY)</option>
+                <option value="SAD">슬픈 얼굴(SAD)</option>
+                <option value="ANGRY">화난 얼굴(ANGRY)</option>
+                <option value="SURPRISED">놀란 얼굴(SURPRISED)</option>
             </select>
         </div>
         <button id="uploadBtn">업로드</button>
+        <button id="cameraUploadBtn">카메라 열기</button>
     </div>
     
     <div class="section">
         <h2>이미지 수정</h2>
         <div class="form-group">
             <label for="updateImage">새 이미지 선택:</label>
-            <input type="file" id="updateImage" name="image" accept="image/*">
+            <input type="file" id="updateImage" name="image" accept="image/*" capture="user">
+            <img id="updatePreview" class="preview-image">
         </div>
         <div class="form-group">
-            <label for="updateAngle">각도 선택:</label>
-            <select id="updateAngle" name="angleType">
-                <option value="LEFT">좌측(LEFT)</option>
-                <option value="FRONT">정면(FRONT)</option>
-                <option value="RIGHT">우측(RIGHT)</option>
+            <label for="updateExpression">표정 선택:</label>
+            <select id="updateExpression" name="expression">
+                <option value="NEUTRAL">기본 얼굴(NEUTRAL)</option>
+                <option value="HAPPY">웃는 얼굴(HAPPY)</option>
+                <option value="SAD">슬픈 얼굴(SAD)</option>
+                <option value="ANGRY">화난 얼굴(ANGRY)</option>
+                <option value="SURPRISED">놀란 얼굴(SURPRISED)</option>
             </select>
         </div>
         <button id="updateBtn">수정</button>
+        <button id="cameraUpdateBtn">카메라 열기</button>
     </div>
     
     <div class="section">
         <h2>이미지 삭제</h2>
         <div class="form-group">
-            <label for="deleteAngle">각도 선택:</label>
-            <select id="deleteAngle" name="angleType">
-                <option value="LEFT">좌측(LEFT)</option>
-                <option value="FRONT">정면(FRONT)</option>
-                <option value="RIGHT">우측(RIGHT)</option>
+            <label for="deleteExpression">표정 선택:</label>
+            <select id="deleteExpression" name="expression">
+                <option value="NEUTRAL">기본 얼굴(NEUTRAL)</option>
+                <option value="HAPPY">웃는 얼굴(HAPPY)</option>
+                <option value="SAD">슬픈 얼굴(SAD)</option>
+                <option value="ANGRY">화난 얼굴(ANGRY)</option>
+                <option value="SURPRISED">놀란 얼굴(SURPRISED)</option>
             </select>
         </div>
         <button id="deleteBtn">삭제</button>
@@ -156,8 +197,108 @@
         <pre id="resultContent"></pre>
     </div>
 
+    <!-- 카메라 컨테이너 -->
+    <div id="camera-container">
+        <video id="camera-view" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+        <div id="camera-buttons">
+            <button id="take-photo-btn">사진 촬영</button>
+            <button id="close-camera-btn">닫기</button>
+        </div>
+    </div>
+
     <script>
         let token = '';
+        let currentAction = ''; // 현재 카메라 작업 ('upload' 또는 'update')
+        let stream = null;
+        const cameraContainer = document.getElementById('camera-container');
+        const cameraView = document.getElementById('camera-view');
+        const canvas = document.getElementById('canvas');
+        
+        // 미리보기 이미지 핸들러
+        function handleFilePreview(fileInput, previewImage) {
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewImage.src = e.target.result;
+                        previewImage.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        
+        // 파일 미리보기 초기화
+        handleFilePreview(document.getElementById('uploadImage'), document.getElementById('uploadPreview'));
+        handleFilePreview(document.getElementById('updateImage'), document.getElementById('updatePreview'));
+        
+        // 카메라 열기
+        async function openCamera(action) {
+            currentAction = action;
+            try {
+                // 전면 카메라 사용을 시도합니다
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user' },
+                    audio: false
+                });
+                
+                cameraView.srcObject = stream;
+                cameraContainer.style.display = 'flex';
+                
+            } catch (error) {
+                alert('카메라에 접근할 수 없습니다: ' + error.message);
+                console.error('카메라 에러:', error);
+            }
+        }
+        
+        // 카메라 닫기
+        function closeCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            cameraContainer.style.display = 'none';
+            currentAction = '';
+        }
+        
+        // 사진 캡처
+        function capturePhoto() {
+            const context = canvas.getContext('2d');
+            canvas.width = cameraView.videoWidth;
+            canvas.height = cameraView.videoHeight;
+            context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
+            
+            // 캡처된 이미지를 Blob으로 변환
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "camera_photo.jpg", { type: "image/jpeg" });
+                
+                if (currentAction === 'upload') {
+                    const uploadInput = document.getElementById('uploadImage');
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    uploadInput.files = dataTransfer.files;
+                    document.getElementById('uploadPreview').src = URL.createObjectURL(blob);
+                    document.getElementById('uploadPreview').style.display = 'block';
+                } else if (currentAction === 'update') {
+                    const updateInput = document.getElementById('updateImage');
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    updateInput.files = dataTransfer.files;
+                    document.getElementById('updatePreview').src = URL.createObjectURL(blob);
+                    document.getElementById('updatePreview').style.display = 'block';
+                }
+                
+                closeCamera();
+            }, 'image/jpeg', 0.9);
+        }
+        
+        // 카메라 버튼 이벤트
+        document.getElementById('cameraUploadBtn').addEventListener('click', () => openCamera('upload'));
+        document.getElementById('cameraUpdateBtn').addEventListener('click', () => openCamera('update'));
+        document.getElementById('take-photo-btn').addEventListener('click', capturePhoto);
+        document.getElementById('close-camera-btn').addEventListener('click', closeCamera);
         
         // 로그인
         document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -195,7 +336,7 @@
             }
             
             const imageFile = document.getElementById('uploadImage').files[0];
-            const angleType = document.getElementById('uploadAngle').value;
+            const expression = document.getElementById('uploadExpression').value;
             
             if (!imageFile) {
                 alert('이미지를 선택해주세요');
@@ -204,7 +345,7 @@
             
             const formData = new FormData();
             formData.append('image', imageFile);
-            formData.append('angleType', angleType);
+            formData.append('expression', expression);
             
             try {
                 const response = await fetch('/api/user/images', {
@@ -219,6 +360,8 @@
                 
                 if (response.ok) {
                     showResult('이미지 업로드 성공', data);
+                    document.getElementById('uploadImage').value = '';
+                    document.getElementById('uploadPreview').style.display = 'none';
                 } else {
                     showResult('이미지 업로드 실패', data);
                 }
@@ -235,7 +378,7 @@
             }
             
             const imageFile = document.getElementById('updateImage').files[0];
-            const angleType = document.getElementById('updateAngle').value;
+            const expression = document.getElementById('updateExpression').value;
             
             if (!imageFile) {
                 alert('이미지를 선택해주세요');
@@ -244,7 +387,7 @@
             
             const formData = new FormData();
             formData.append('image', imageFile);
-            formData.append('angleType', angleType);
+            formData.append('expression', expression);
             
             try {
                 const response = await fetch('/api/user/images', {
@@ -259,6 +402,8 @@
                 
                 if (response.ok) {
                     showResult('이미지 수정 성공', data);
+                    document.getElementById('updateImage').value = '';
+                    document.getElementById('updatePreview').style.display = 'none';
                 } else {
                     showResult('이미지 수정 실패', data);
                 }
@@ -274,10 +419,10 @@
                 return;
             }
             
-            const angleType = document.getElementById('deleteAngle').value;
+            const expression = document.getElementById('deleteExpression').value;
             
             try {
-                const response = await fetch(`/api/user/images?angleType=${angleType}`, {
+                const response = await fetch(`/api/user/images?expression=${expression}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -315,7 +460,30 @@
                 
                 if (response.ok) {
                     showResult('이미지 조회 성공', data);
-                    displayImages(data.data);
+                    
+                    // 이미지 목록 표시
+                    const imageContainer = document.getElementById('imageContainer');
+                    imageContainer.innerHTML = '';
+                    
+                    if (data.data && data.data.length > 0) {
+                        data.data.forEach(image => {
+                            const card = document.createElement('div');
+                            card.className = 'image-card';
+                            
+                            const img = document.createElement('img');
+                            img.src = `/images/${image.imagePath}/${image.imageName}`;
+                            img.alt = `${image.expression} 이미지`;
+                            
+                            const info = document.createElement('p');
+                            info.textContent = `표정: ${image.expression}`;
+                            
+                            card.appendChild(img);
+                            card.appendChild(info);
+                            imageContainer.appendChild(card);
+                        });
+                    } else {
+                        imageContainer.innerHTML = '<p>등록된 이미지가 없습니다.</p>';
+                    }
                 } else {
                     showResult('이미지 조회 실패', data);
                 }
@@ -328,35 +496,6 @@
         function showResult(title, data) {
             const resultContent = document.getElementById('resultContent');
             resultContent.textContent = `${title}\n${JSON.stringify(data, null, 2)}`;
-        }
-        
-        // 이미지 표시
-        function displayImages(images) {
-            const container = document.getElementById('imageContainer');
-            container.innerHTML = '';
-            
-            if (!images || images.length === 0) {
-                container.innerHTML = '<p>등록된 이미지가 없습니다.</p>';
-                return;
-            }
-            
-            images.forEach(image => {
-                const card = document.createElement('div');
-                card.className = 'image-card';
-                
-                const img = document.createElement('img');
-                img.src = image.imagePath;
-                img.alt = `${image.angleType} 이미지`;
-                
-                const info = document.createElement('div');
-                info.innerHTML = `<strong>각도:</strong> ${image.angleType}<br>
-                                <strong>ID:</strong> ${image.imageId}<br>
-                                <strong>이름:</strong> ${image.imageName}`;
-                
-                card.appendChild(img);
-                card.appendChild(info);
-                container.appendChild(card);
-            });
         }
     </script>
 </body>
