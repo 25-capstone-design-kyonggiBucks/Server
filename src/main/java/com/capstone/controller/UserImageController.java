@@ -1,7 +1,7 @@
 package com.capstone.controller;
 
 import com.capstone.common.ApiResponse;
-import com.capstone.domain.ImageAngleType;
+import com.capstone.domain.FacialExpression;
 import com.capstone.service.UserImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,9 +23,9 @@ public class UserImageController {
     public ResponseEntity<ApiResponse<Object>> uploadImage(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("image") MultipartFile image,
-            @RequestParam("angleType") ImageAngleType angleType) {
+            @RequestParam("expression") FacialExpression expression) {
         
-        userImageService.uploadImage(userDetails.getUsername(), image, angleType);
+        userImageService.uploadImage(userDetails.getUsername(), image, expression);
         ApiResponse<Object> response = ApiResponse.success(HttpStatus.CREATED);
         return ResponseEntity.status(response.getStatus().value()).body(response);
     }
@@ -34,9 +34,9 @@ public class UserImageController {
     public ResponseEntity<ApiResponse<Object>> updateImage(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("image") MultipartFile image,
-            @RequestParam("angleType") ImageAngleType angleType) {
+            @RequestParam("expression") FacialExpression expression) {
         
-        userImageService.updateImage(userDetails.getUsername(), image, angleType);
+        userImageService.updateImage(userDetails.getUsername(), image, expression);
         ApiResponse<Object> response = ApiResponse.success(HttpStatus.OK);
         return ResponseEntity.status(response.getStatus().value()).body(response);
     }
@@ -44,9 +44,9 @@ public class UserImageController {
     @DeleteMapping
     public ResponseEntity<ApiResponse<Object>> deleteImage(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("angleType") ImageAngleType angleType) {
+            @RequestParam("expression") FacialExpression expression) {
         
-        userImageService.deleteImage(userDetails.getUsername(), angleType);
+        userImageService.deleteImage(userDetails.getUsername(), expression);
         ApiResponse<Object> response = ApiResponse.success(HttpStatus.OK);
         return ResponseEntity.status(response.getStatus().value()).body(response);
     }

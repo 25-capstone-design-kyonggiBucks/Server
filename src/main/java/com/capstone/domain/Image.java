@@ -20,10 +20,6 @@ public class Image {
 
     @Enumerated(value = EnumType.STRING)
     @Column
-    private ImageAngleType imageAngleType;
-
-    @Enumerated(value = EnumType.STRING)
-    @Column
     private FacialExpression facialExpression;
 
     @Column(nullable = false)
@@ -32,10 +28,10 @@ public class Image {
     @Column(nullable = false)
     private String imageName;
 
-    void setInfo(String name, String path, ImageAngleType angle, User user) {
+    void setInfo(String name, String path, FacialExpression expression, User user) {
         this.imageName = name;
         this.imagePath = path;
-        this.imageAngleType = angle;
+        this.facialExpression = expression;
         this.user = user;
     }
 }

@@ -1,7 +1,7 @@
 package com.capstone.service;
 
 import com.capstone.domain.Image;
-import com.capstone.domain.ImageAngleType;
+import com.capstone.domain.FacialExpression;
 import com.capstone.domain.User;
 import com.capstone.dto.response.UserImageResponse;
 import com.capstone.exception.ResourceNotFoundException;
@@ -28,7 +28,7 @@ public class UserImageService {
     private final FileUtil fileUtil;
 
     @Transactional
-    public void uploadImage(String loginId, MultipartFile image, ImageAngleType angleType) {
+    public void uploadImage(String loginId, MultipartFile image, FacialExpression expression) {
         User user = getUserByLoginId(loginId);
         
         try {
@@ -37,14 +37,14 @@ public class UserImageService {
             String imagePath = fileUtil.saveImage(image, imageName);
             
             // 사용자에게 이미지 추가
-            user.addFaceImage(imageName, imagePath, angleType);
+            user.addFaceImage(imageName, imagePath, expression);
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
         }
     }
 
     @Transactional
-    public void updateImage(String loginId, MultipartFile image, ImageAngleType angleType) {
+    public void updateImage(String loginId, MultipartFile image, FacialExpression expression) {
         User user = getUserByLoginId(loginId);
         
         try {
@@ -54,7 +54,7 @@ public class UserImageService {
             
             // 기존 이미지 찾기 및 삭제
             user.getUserImages().stream()
-                    .filter(img -> img.getImageAngleType() == angleType)
+                    .filter(img -> img.getFacialExpression() == expression)
                     .findFirst()
                     .ifPresent(img -> {
                         try {
@@ -65,19 +65,19 @@ public class UserImageService {
                     });
             
             // 사용자에게 이미지 업데이트
-            user.changeFaceImage(imageName, imagePath, angleType);
+            user.changeFaceImage(imageName, imagePath, expression);
         } catch (IOException e) {
             throw new RuntimeException("이미지 업데이트 실패: " + e.getMessage());
         }
     }
 
     @Transactional
-    public void deleteImage(String loginId, ImageAngleType angleType) {
+    public void deleteImage(String loginId, FacialExpression expression) {
         User user = getUserByLoginId(loginId);
         
         // 기존 이미지 찾기 및 삭제
         user.getUserImages().stream()
-                .filter(img -> img.getImageAngleType() == angleType)
+                .filter(img -> img.getFacialExpression() == expression)
                 .findFirst()
                 .ifPresent(img -> {
                     try {
@@ -98,7 +98,7 @@ public class UserImageService {
                         image.getImage_id(),
                         image.getImageName(),
                         image.getImagePath(),
-                        image.getImageAngleType()))
+                        image.getFacialExpression()))
                 .collect(Collectors.toList());
     }
 

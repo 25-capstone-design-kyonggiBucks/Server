@@ -54,23 +54,27 @@ public class User {
         this.password = passwordEncoder.encode(rawPassword);
     }
 
-    public void addFaceImage(String imageName,String imagePath,ImageAngleType angleType) {
-        boolean exists = userImages.stream().anyMatch(i -> i.getImageAngleType() == angleType);
+    public void addFaceImage(String imageName, String imagePath, FacialExpression expression) {
+        boolean exists = userImages.stream()
+                .anyMatch(i -> i.getFacialExpression() == expression);
 
         if(exists)
-            throw new IllegalStateException("[ERROR] 이미 등록된 앵글입니다: "+angleType);
+            throw new IllegalStateException("[ERROR] 이미 등록된 표정입니다: " + expression);
 
         Image image = new Image();
-        image.setInfo(imageName,imagePath,angleType,this);
+        image.setInfo(imageName, imagePath, expression, this);
         userImages.add(image);
     }
-    public void changeFaceImage(String imageName,String imagePath,ImageAngleType angleType) {
-        Image image = userImages.stream().filter(i -> i.getImageAngleType() == angleType).findAny()
-                .orElseThrow(() -> new IllegalStateException("[ERROR] 해당 타입에 해당하는 앵글이 등록되있지 않습니다: " + angleType));
+
+    public void changeFaceImage(String imageName, String imagePath, FacialExpression expression) {
+        Image image = userImages.stream()
+                .filter(i -> i.getFacialExpression() == expression)
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("[ERROR] 해당 표정에 해당하는 이미지가 등록되어 있지 않습니다: " + expression));
         boolean removeSuccess = userImages.remove(image);
         if(!removeSuccess)
             throw new IllegalStateException("[ERROR] 이미지 삭제에 실패했습니다.");
-        addFaceImage(imageName,imagePath,angleType);
+        addFaceImage(imageName, imagePath, expression);
     }
 
     /*

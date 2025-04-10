@@ -1,11 +1,11 @@
 package com.capstone.dto.response;
 
-import com.capstone.domain.ImageAngleType;
+import com.capstone.domain.FacialExpression;
 
 public record UserImageResponse(
     Long imageId,
     String imageName,
     String imagePath,
-    ImageAngleType angleType
+    FacialExpression expression
 ) {
 } 
