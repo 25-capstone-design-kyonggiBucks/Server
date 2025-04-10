@@ -30,6 +30,7 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         if(StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
 
             Authentication authentication = tokenProvider.getAuthentication(jwt);
+            System.out.println("Authorities = " + authentication.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         System.out.println("RequestURI: " + request.getRequestURI());
