@@ -56,6 +56,19 @@ public class UserAuthService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public void signUpAdminAccount(String loginId,String rawPassword) {
+        validateSignUp(loginId,rawPassword);
+        String encodedPassword = passwordEncoder.encode(rawPassword);
+        UserDto userDto = UserDto.builder()
+                .loginId(loginId)
+                .password(encodedPassword)
+                .role(UserRole.ROLE_ADMIN)
+                .build();
+        User user = User.of(userDto);
+        userRepository.save(user);
+    }
+
 
     private void validateSignUp(String loginId, String rawPassword) {
         boolean isDuplicatedLoginId = userRepository.existsByLoginId(loginId);
