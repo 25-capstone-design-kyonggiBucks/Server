@@ -64,4 +64,15 @@ public class BookController {
         return ResponseEntity.status(data.getStatus())
                 .body(data);
     }
+    @GetMapping("/{bookId}")
+    public ResponseEntity<ApiResponse<BookResponse>> getBook(@PathVariable Long bookId) {
+        BookDto bookDto = bookService.getBook(bookId);
+        BookResponse book = BookResponse.from(bookDto);
+
+        ApiResponse<BookResponse> data = ApiResponse.success(book, HttpStatus.OK);
+        return ResponseEntity.status(data.getStatus())
+                .body(data);
+    }
+
+
 }

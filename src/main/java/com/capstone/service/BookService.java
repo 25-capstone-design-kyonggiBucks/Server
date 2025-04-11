@@ -67,4 +67,12 @@ public class BookService {
     public List<BookDto> getAllBooksWithType(BookType type) {
         return bookRepository.findAllByBookType(type).stream().map(BookDto::fromEntity).toList();
     }
+
+
+    @Transactional(readOnly = true)
+    public BookDto getBook(Long bookId) {
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalStateException("[ERROR] book을 찾지 못했습니다."));
+        return BookDto.fromEntity(book);
+    }
+
 }
