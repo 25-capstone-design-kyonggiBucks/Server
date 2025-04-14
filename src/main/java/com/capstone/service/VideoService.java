@@ -50,10 +50,9 @@ public class VideoService {
     }
 
     private Resource loadVideoResource(String videoPath, String videoName) throws FileNotFoundException {
-        String URI = videoPath + "/" + videoName;
-        Path path = Paths.get(URI);
+        Path path = Paths.get(videoPath).resolve(videoName).normalize();
         if (!Files.exists(path)) {
-            throw new FileNotFoundException("Video not found: " + URI);
+            throw new FileNotFoundException("Video not found: " + path);
         }
         return new FileSystemResource(path.toFile());
     }
