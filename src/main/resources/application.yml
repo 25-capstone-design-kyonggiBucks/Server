@@ -39,7 +39,7 @@ security:
 
 app:
   upload:
-    dir: /Users/byeonjuhyeong/Desktop
-    image : /Users/byeonjuhyeong/Desktop/uploads/images
-    video : /Users/byeonjuhyeong/Desktop/uploads/videos
+    dir: ${user.home}/Desktop
+    image : ${user.home}/Desktop/uploads/images
+    video : ${user.home}/Desktop/uploads/videos
 
