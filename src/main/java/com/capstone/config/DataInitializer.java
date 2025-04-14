@@ -31,16 +31,16 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        BookDto bookDto = BookDto.builder()
-                .title("toystory")
-                .bookType(BookType.NONE)
-                .summary("summary")
-                .build();
-        Book book = Book.of(bookDto);
-        bookRepository.save(book);
-
-        Video video = Video.of(book, uploadDir + "/default", "toystory.mp4");
-        videoRepository.save(video);
-        userAuthService.signUpAdminAccount("admin","1234");
+//        BookDto bookDto = BookDto.builder()
+//                .title("toystory")
+//                .bookType(BookType.NONE)
+//                .summary("summary")
+//                .build();
+//        Book book = Book.of(bookDto);
+//        bookRepository.save(book);
+//
+//        Video video = Video.of(book, uploadDir + "/default", "toystory.mp4");
+//        videoRepository.save(video);
+//        userAuthService.signUpAdminAccount("admin","1234");
     }
 }
