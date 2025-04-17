@@ -37,6 +37,8 @@ public class User {
     @OneToMany(mappedBy = "user",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Video> videos = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<Audio> audios = new ArrayList<>();
 
     public static User of(UserDto userDto) {
         User user = new User();
@@ -77,6 +79,33 @@ public class User {
         addFaceImage(imageName, imagePath, expression);
     }
 
+    public void addAudio(String audioName, String audioPath, AudioType audioType, String description) {
+        Audio audio = Audio.of(this, audioPath, audioName, audioType, description);
+        audios.add(audio);
+    }
+
+    public void updateAudio(Long audioId, String audioName, String audioPath, String description) {
+        Audio audio = audios.stream()
+                .filter(a -> a.getAudioId().equals(audioId))
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("[ERROR] 해당 ID의 음성 파일이 존재하지 않습니다: " + audioId));
+        
+        audio.updateAudio(audioPath, audioName);
+        audio.updateDescription(description);
+    }
+
+    public void removeAudio(Long audioId) {
+        Audio audio = audios.stream()
+                .filter(a -> a.getAudioId().equals(audioId))
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("[ERROR] 해당 ID의 음성 파일이 존재하지 않습니다: " + audioId));
+        
+        boolean removed = audios.remove(audio);
+        if (!removed) {
+            throw new IllegalStateException("[ERROR] 음성 파일 삭제에 실패했습니다.");
+        }
+    }
+
     /*
     * 사용자 custom 동영상은 동화당 최대 1개씩 저장할 수 있다.
     * */
@@ -90,6 +119,4 @@ public class User {
 //        customVideo.setUser(this);
 //        videos.add(customVideo);
 //    }
-
-
 }

@@ -42,4 +42,5 @@ app:
     dir: ${user.home}/Desktop
     image : ${user.home}/Desktop/uploads/images
     video : ${user.home}/Desktop/uploads/videos
+    audio : ${user.home}/Desktop/uploads/audios
 

@@ -18,12 +18,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path imageUploadPath = Paths.get(uploadDir, "uploads", "images");
         Path videoUploadPath = Paths.get(uploadDir, "uploads", "videos");
+        Path audioUploadPath = Paths.get(uploadDir, "uploads", "audios");
 
         String imageResourcePath = imageUploadPath.toUri().toString();
         String videoResourcePath = videoUploadPath.toUri().toString();
+        String audioResourcePath = audioUploadPath.toUri().toString();
 
         System.out.println("이미지 경로: " + imageResourcePath);
         System.out.println("영상 경로: " + videoResourcePath);
+        System.out.println("음성 경로: " + audioResourcePath);
 
         registry.addResourceHandler("/uploads/images/**")
                 .addResourceLocations(imageResourcePath)
@@ -31,6 +34,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/uploads/videos/**")
                 .addResourceLocations(videoResourcePath)
+                .setCachePeriod(0);
+                
+        registry.addResourceHandler("/uploads/audios/**")
+                .addResourceLocations(audioResourcePath)
                 .setCachePeriod(0);
     }
 } 
