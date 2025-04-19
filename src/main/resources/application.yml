@@ -4,19 +4,25 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/capstone?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/capstone?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
     username: root # 나중에 실제 환경에서 변경해주시면 됩니다.
-    password: 0IzRxaAlqqxNCYg # 나중에 실제 환경에서 변경해주시면 됩니다.
+    password: 1234 # 나중에 실제 환경에서 변경해주시면 됩니다.
 
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+    defer-datasource-initialization: true
 
+  sql:
+    init:
+      mode: never
+      data-locations: classpath:data.sql
+      
   servlet:
     multipart:
       max-file-size: 10MB
