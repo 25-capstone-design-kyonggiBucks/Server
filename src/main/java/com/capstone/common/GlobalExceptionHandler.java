@@ -2,6 +2,7 @@ package com.capstone.common;
 
 import com.capstone.exception.BadRequestException;
 import com.capstone.exception.DuplicateUserException;
+import com.capstone.exception.InvalidLoginFormatException;
 import com.capstone.exception.InvalidPasswordException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,7 +65,7 @@ public class GlobalExceptionHandler {
                 .body(data);
     }
 
-    @ExceptionHandler({DuplicateUserException.class,InvalidPasswordException.class})
+    @ExceptionHandler({DuplicateUserException.class,InvalidPasswordException.class, InvalidLoginFormatException.class})
     public ResponseEntity<ApiResponse<?>> handleSignUpException(Exception ex) {
         HttpStatus status = HttpStatus.CONFLICT;
         ApiResponse<Object> data = ApiResponse.builder()

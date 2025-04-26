@@ -4,6 +4,7 @@ import com.capstone.domain.User;
 import com.capstone.dto.UserDto;
 import com.capstone.dto.response.ResponseLogin;
 import com.capstone.exception.DuplicateUserException;
+import com.capstone.exception.InvalidLoginFormatException;
 import com.capstone.repository.UserRepository;
 import com.capstone.security.UserPrincipal;
 import com.capstone.security.UserRole;
@@ -16,6 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Service
 @RequiredArgsConstructor
 public class UserAuthService {
@@ -24,6 +28,9 @@ public class UserAuthService {
     private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final String SIGNUP_REGEX = "^[A-Za-z0-9]{4,20}";
+    private final Pattern pattern = Pattern.compile(SIGNUP_REGEX);
 
 
     public ResponseLogin authenticate(String loginId,String password) {
@@ -71,6 +78,11 @@ public class UserAuthService {
 
 
     private void validateSignUp(String loginId, String rawPassword) {
+        Matcher matcher = pattern.matcher(loginId);
+
+        if (!matcher.matches())
+            throw new InvalidLoginFormatException("[ERROR] 아이디 형식이 올바르지 않습니다.");
+
         boolean isDuplicatedLoginId = userRepository.existsByLoginId(loginId);
         if(isDuplicatedLoginId)
             throw new DuplicateUserException("[ERROR] 이미 존재하는 아이디 입니다.");
