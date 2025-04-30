@@ -374,6 +374,9 @@
             formData.append('image', imageFile);
             formData.append('expression', expression);
             
+            console.log('업로드할 이미지:', imageFile);
+            console.log('선택한 표정:', expression);
+            
             try {
                 const response = await fetch('/api/user/images', {
                     method: 'POST',
@@ -384,16 +387,22 @@
                 });
                 
                 const data = await response.json();
+                console.log('업로드 응답:', data);
                 
                 if (response.ok) {
                     showResult('이미지 업로드 성공', data);
                     document.getElementById('uploadImage').value = '';
                     document.getElementById('uploadPreview').style.display = 'none';
+                    
+                    // 업로드 성공 후 이미지 목록 자동 갱신
+                    document.getElementById('getImagesBtn').click();
                 } else {
                     showResult('이미지 업로드 실패', data);
+                    console.error('업로드 실패:', data);
                 }
             } catch (error) {
                 showResult('이미지 업로드 중 오류 발생', error);
+                console.error('업로드 오류:', error);
             }
         });
         
@@ -416,6 +425,9 @@
             formData.append('image', imageFile);
             formData.append('expression', expression);
             
+            console.log('수정할 이미지:', imageFile);
+            console.log('선택한 표정:', expression);
+            
             try {
                 const response = await fetch('/api/user/images', {
                     method: 'PUT',
@@ -426,16 +438,22 @@
                 });
                 
                 const data = await response.json();
+                console.log('수정 응답:', data);
                 
                 if (response.ok) {
                     showResult('이미지 수정 성공', data);
                     document.getElementById('updateImage').value = '';
                     document.getElementById('updatePreview').style.display = 'none';
+                    
+                    // 수정 성공 후 이미지 목록 자동 갱신
+                    document.getElementById('getImagesBtn').click();
                 } else {
                     showResult('이미지 수정 실패', data);
+                    console.error('수정 실패:', data);
                 }
             } catch (error) {
                 showResult('이미지 수정 중 오류 발생', error);
+                console.error('수정 오류:', error);
             }
         });
         
@@ -447,6 +465,12 @@
             }
             
             const expression = document.getElementById('deleteExpression').value;
+            console.log('삭제할 표정:', expression);
+            
+            // 삭제 확인
+            if (!confirm(`${expression} 표정 이미지를 삭제하시겠습니까?`)) {
+                return;
+            }
             
             try {
                 const response = await fetch(`/api/user/images?expression=${expression}`, {
@@ -457,14 +481,20 @@
                 });
                 
                 const data = await response.json();
+                console.log('삭제 응답:', data);
                 
                 if (response.ok) {
                     showResult('이미지 삭제 성공', data);
+                    
+                    // 삭제 성공 후 이미지 목록 자동 갱신
+                    document.getElementById('getImagesBtn').click();
                 } else {
                     showResult('이미지 삭제 실패', data);
+                    console.error('삭제 실패:', data);
                 }
             } catch (error) {
                 showResult('이미지 삭제 중 오류 발생', error);
+                console.error('삭제 오류:', error);
             }
         });
         
@@ -487,6 +517,7 @@
                 
                 if (response.ok) {
                     showResult('이미지 조회 성공', data);
+                    console.log('이미지 데이터:', data);
                     
                     // 이미지 목록 표시
                     const imageContainer = document.getElementById('imageContainer');
@@ -494,15 +525,29 @@
                     
                     if (data.data && data.data.length > 0) {
                         data.data.forEach(image => {
+                            console.log('이미지 항목:', image);
+                            
                             const card = document.createElement('div');
                             card.className = 'image-card';
                             
                             const img = document.createElement('img');
-                            img.src = `/images/${image.imagePath}/${image.imageName}`;
-                            img.alt = `${image.expression} 이미지`;
+                            
+                            // 이미지 경로 확인 및 처리
+                            if (image.imagePath) {
+                                img.src = image.imagePath;
+                                img.onerror = () => {
+                                    console.error('이미지 로드 실패:', image.imagePath);
+                                    img.src = 'https://via.placeholder.com/150?text=이미지+없음';
+                                };
+                            } else {
+                                console.warn('이미지 경로 없음:', image);
+                                img.src = 'https://via.placeholder.com/150?text=이미지+없음';
+                            }
+                            
+                            img.alt = `${image.expression || '알 수 없음'} 이미지`;
                             
                             const info = document.createElement('p');
-                            info.textContent = `표정: ${image.expression}`;
+                            info.textContent = `표정: ${image.expression || '알 수 없음'}`;
                             
                             card.appendChild(img);
                             card.appendChild(info);
@@ -516,6 +561,7 @@
                 }
             } catch (error) {
                 showResult('이미지 조회 중 오류 발생', error);
+                console.error('이미지 조회 오류:', error);
             }
         });
         
