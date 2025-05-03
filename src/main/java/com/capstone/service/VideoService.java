@@ -2,6 +2,7 @@ package com.capstone.service;
 
 import com.capstone.domain.Video;
 import com.capstone.domain.VideoType;
+import com.capstone.domain.Voice;
 import com.capstone.repository.VideoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
@@ -9,7 +10,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRange;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,6 +25,17 @@ import java.nio.file.Paths;
 public class VideoService {
 
     private final VideoRepository videoRepository;
+    private final UserImageService userImageService;
+
+    /*public void createCustomVideo(Long userId,Long bookId,VideoType videoType) {
+        RestClient restClient = RestClient.create();
+        restClient.post()
+                .uri("url")
+                .contentType(MediaType.APPLICATION_JSON)
+
+
+
+    }*/
 
     public Resource getDefaultVideo(Long bookId,VideoType videoType) throws FileNotFoundException {
         if(videoType ==VideoType.CUSTOM)
@@ -45,8 +59,10 @@ public class VideoService {
         long start = range != null ? range.getRangeStart(contentLength) : 0;
         long chunkSize = 1024 * 1024; // 1MB 단위 전송
 
-        long end = Math.min(chunkSize, contentLength - start);
-        return new ResourceRegion(video, start, end);
+        long end = range != null ? range.getRangeEnd(contentLength) : Math.min(start + chunkSize - 1, contentLength - 1);
+        long rangeLength = end - start + 1;
+
+        return new ResourceRegion(video, start, rangeLength);
     }
 
     private Resource loadVideoResource(String videoPath, String videoName) throws FileNotFoundException {

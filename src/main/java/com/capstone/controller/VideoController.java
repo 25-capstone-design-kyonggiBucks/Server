@@ -22,14 +22,12 @@ public class VideoController {
     private final VideoService videoService;
 
 
-    @GetMapping("/{bookId}/stream")
+    @GetMapping("/{bookId}/stream/default")
     public ResponseEntity<ResourceRegion> streamDefaultVideo(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                              @PathVariable Long bookId,
-                                                             @RequestHeader HttpHeaders headers,
-                                                             @RequestParam VideoType type) throws IOException {
-        if(type !=VideoType.CUSTOM && type!=VideoType.DEFAULT)
-            throw new IllegalStateException("[ERROR] videoType이 올바르지 않습니다.");
-        Resource video = type.resolveVideo(videoService, userPrincipal.getUserId(), bookId);
+                                                             @RequestHeader HttpHeaders headers) throws IOException {
+
+        Resource video = videoService.getDefaultVideo(bookId, VideoType.DEFAULT);
         ResourceRegion region = videoService.getVideoRegion(video, headers);
 
         return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)

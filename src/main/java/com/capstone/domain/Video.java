@@ -28,6 +28,10 @@ public class Video {
     @Column
     private VideoType videoType;
 
+    @Enumerated(value = EnumType.STRING)
+    @Column
+    private Voice voice;
+
     @Column(nullable = false)
     private String videoPath;
 
@@ -35,17 +39,18 @@ public class Video {
     private String videoName;
 
 
-    public static Video of(Book book,String videoPath,String videoName) {
-        return Video.of(book,null,videoPath,videoName,VideoType.DEFAULT);
+    public static Video of(Book book,String videoPath,String videoName,Voice voice) {
+        return Video.of(book,null,videoPath,videoName,VideoType.DEFAULT,voice);
     }
 
-    private static Video of(Book book,User user, String videoPath,String videoName,VideoType videoType) {
+    private static Video of(Book book,User user, String videoPath,String videoName,VideoType videoType,Voice voice) {
         Video video = new Video();
         video.book = book;
         video.user = user;
         video.videoPath = videoPath;
         video.videoName = videoName;
         video.videoType = videoType;
+        video.voice = voice;
         return video;
     }
     public void setUser(User user) {
