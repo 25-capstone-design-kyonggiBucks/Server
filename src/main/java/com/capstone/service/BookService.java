@@ -22,7 +22,7 @@ public class BookService {
 
 
     @Transactional
-    public void addBook(BookDto bookDto, MultipartFile image) {
+    public Long addBook(BookDto bookDto, MultipartFile image) {
         Book book = Book.of(bookDto);
 
         try {
@@ -33,7 +33,8 @@ public class BookService {
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패" + e.getMessage());
         }
-        bookRepository.save(book);
+        Book savedBook = bookRepository.save(book);
+        return savedBook.getBookId();
     }
 
     @Transactional

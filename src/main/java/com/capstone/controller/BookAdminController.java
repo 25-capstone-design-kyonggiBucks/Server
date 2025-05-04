@@ -6,6 +6,7 @@ import com.capstone.dto.BookDto;
 import com.capstone.dto.request.CreateBookRequest;
 import com.capstone.dto.request.UpdateBookRequest;
 import com.capstone.dto.response.BookResponse;
+import com.capstone.dto.response.CreateBookResponse;
 import com.capstone.service.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,8 +35,9 @@ public class BookAdminController {
                 .summary(request.summary())
                 .build();
 
-        bookService.addBook(bookDto,image);
-        ApiResponse<Object> data = ApiResponse.success(HttpStatus.CREATED);
+        Long bookId = bookService.addBook(bookDto, image);
+        CreateBookResponse response = CreateBookResponse.of(bookId);
+        ApiResponse<Object> data = ApiResponse.success(response,HttpStatus.CREATED);
         return ResponseEntity.status(data.getStatus())
                 .body(data);
     }
