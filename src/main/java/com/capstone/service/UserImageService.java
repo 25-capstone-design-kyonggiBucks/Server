@@ -4,6 +4,7 @@ import com.capstone.domain.Image;
 import com.capstone.domain.FacialExpression;
 import com.capstone.domain.User;
 import com.capstone.dto.response.UserImageResponse;
+import com.capstone.exception.MissingEmotionImageException;
 import com.capstone.exception.ResourceNotFoundException;
 import com.capstone.repository.UserRepository;
 import com.capstone.util.FileUtil;
@@ -16,8 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -102,8 +102,24 @@ public class UserImageService {
                 .collect(Collectors.toList());
     }
 
+
     private User getUserByLoginId(String loginId) {
         return userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다: " + loginId));
     }
+
+    /*public void ValidateAllEmotionImagesExist(List<UserImageResponse> images) {
+        List<FacialExpression> userEmotions = images.stream().map(UserImageResponse::expression).toList();
+
+        // 필수 표정 목록
+        List<FacialExpression> requiredExpression = List.of(FacialExpression.HAPPY, FacialExpression.ANGRY, FacialExpression.SAD, FacialExpression.SURPRISED);
+
+        HashSet<FacialExpression> userEmotionSet = new HashSet<>(userEmotions);
+
+        List<FacialExpression> missing= requiredExpression.stream().filter(expression -> !userEmotionSet.contains(expression)).toList();
+
+        if(!missing.isEmpty())
+            throw new MissingEmotionImageException("[ERROR] 다음 표정이 누락됐습니다." + missing);
+
+    }*/
 } 

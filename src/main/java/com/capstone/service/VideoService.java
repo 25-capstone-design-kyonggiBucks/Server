@@ -1,10 +1,16 @@
 package com.capstone.service;
 
+import com.capstone.domain.User;
 import com.capstone.domain.Video;
 import com.capstone.domain.VideoType;
 import com.capstone.domain.Voice;
+import com.capstone.dto.AudioDto;
+import com.capstone.dto.request.CreateCustomVideoRequest;
+import com.capstone.dto.response.UserImageResponse;
+import com.capstone.repository.UserRepository;
 import com.capstone.repository.VideoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourceRegion;
@@ -19,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +33,32 @@ public class VideoService {
 
     private final VideoRepository videoRepository;
     private final UserImageService userImageService;
+    private final AudioService audioService;
+    private final UserRepository userRepository;
 
-    /*public void createCustomVideo(Long userId,Long bookId,VideoType videoType) {
+    @Value("${app.upload.video}")
+    private String UPLOADDIR;
+
+
+
+    /*public void createCustomVideo(Long userId,Long bookId,VideoType videoType,Voice voice) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("[ERROR] 유저를 찾을 수 없습니다."));
+
+        // 표정 이미지 조회
+        List<UserImageResponse> userImages = userImageService.getUserImages(user.getLoginId());
+        userImageService.ValidateAllEmotionImagesExist(userImages);
+
+        // 오디오 조회
+        List<AudioDto> userAudios = audioService.getAllAudios(user.getLoginId());
+
+
+
+
+        // api 요청
         RestClient restClient = RestClient.create();
         restClient.post()
                 .uri("url")
-                .contentType(MediaType.APPLICATION_JSON)
-
+                .contentType(MediaType.APPLICATION_JSON);
 
 
     }*/
@@ -66,10 +92,17 @@ public class VideoService {
     }
 
     private Resource loadVideoResource(String videoPath, String videoName) throws FileNotFoundException {
-        Path path = Paths.get(videoPath).resolve(videoName).normalize();
+        Path base = Paths.get(UPLOADDIR).normalize();
+        Path relative = Paths.get(videoPath).normalize();
+
+        Path commonPrefix = Paths.get("/uploads/videos");
+        Path cleanRelative = commonPrefix.relativize(relative);
+        Path path = base.resolve(cleanRelative).normalize();
         if (!Files.exists(path)) {
             throw new FileNotFoundException("Video not found: " + path);
         }
         return new FileSystemResource(path.toFile());
     }
+
+   // private CreateCustomVideoRequest buildCustomVideoRequest(List<UserImageResponse> userImages,List<AudioDto>)
 }

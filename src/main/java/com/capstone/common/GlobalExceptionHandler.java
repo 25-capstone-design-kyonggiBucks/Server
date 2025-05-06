@@ -4,12 +4,15 @@ import com.capstone.exception.BadRequestException;
 import com.capstone.exception.DuplicateUserException;
 import com.capstone.exception.InvalidLoginFormatException;
 import com.capstone.exception.InvalidPasswordException;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.io.IOException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -76,6 +79,15 @@ public class GlobalExceptionHandler {
         ex.printStackTrace();
         return ResponseEntity.status(status)
                 .body(data);
+    }
+    @ExceptionHandler(IOException.class)
+    public void handleIOException(IOException e, HttpServletResponse response) {
+        // 이미 응답이 시작된 경우는 건드리지 않음
+        if (response.isCommitted()) {
+            return;
+        }
+
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
 }
