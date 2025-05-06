@@ -1,7 +1,8 @@
 -- 사용자 초기 데이터
 -- 비밀번호는 "password"가 bcrypt로 인코딩된 값입니다
 INSERT INTO user (login_id, password, role) VALUES
-('user1', '$2a$10$0IYHlSFVOpD.eSMJKTqIz.aB0kwV.NSrWRuLCvXjKhqb3xyqKVV5C', 'ROLE_CLIENT');
+('user1', '$2a$10$0IYHlSFVOpD.eSMJKTqIz.aB0kwV.NSrWRuLCvXjKhqb3xyqKVV5C', 'ROLE_CLIENT'),
+('admin', '$2a$10$0IYHlSFVOpD.eSMJKTqIz.aB0kwV.NSrWRuLCvXjKhqb3xyqKVV5C', 'ROLE_ADMIN');
 
 -- 책 초기 데이터
 INSERT INTO book (title, book_type, image_path, image_name, summary) VALUES
