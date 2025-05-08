@@ -41,6 +41,6 @@ public class DataInitializer implements CommandLineRunner {
 //
 //        Video video = Video.of(book, uploadDir + "/default", "toystory.mp4");
 //        videoRepository.save(video);
-//        userAuthService.signUpAdminAccount("admin","1234");
+//        userAuthService.signUpAdminAccount("adminAccount","1234");
     }
 }
