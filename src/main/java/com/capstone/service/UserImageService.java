@@ -9,6 +9,7 @@ import com.capstone.exception.ResourceNotFoundException;
 import com.capstone.repository.UserRepository;
 import com.capstone.util.FileUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,25 +21,31 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserImageService {
 
     private final UserRepository userRepository;
     private final FileUtil fileUtil;
+    private final FaceAlignService faceAlignService;
 
     @Transactional
     public void uploadImage(String loginId, MultipartFile image, FacialExpression expression) {
         User user = getUserByLoginId(loginId);
         
         try {
-            // 이미지 저장
-            String imageName = UUID.randomUUID().toString() + "_" + image.getOriginalFilename();
-            String imagePath = fileUtil.saveImage(image, imageName);
+            // 파이썬 API를 사용하여 얼굴 인식 및 크롭 처리
+            String imagePath = faceAlignService.alignAndCropFace(image, expression);
+            
+            // 파일 이름 추출
+            String imageName = imagePath.substring(imagePath.lastIndexOf('/') + 1);
             
             // 사용자에게 이미지 추가
             user.addFaceImage(imageName, imagePath, expression);
+            log.info("사용자 {} 얼굴 이미지({}) 업로드 완료", loginId, expression);
         } catch (IOException e) {
+            log.error("이미지 업로드 실패: {}", e.getMessage(), e);
             throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
         }
     }
@@ -48,10 +55,6 @@ public class UserImageService {
         User user = getUserByLoginId(loginId);
         
         try {
-            // 이미지 저장
-            String imageName = UUID.randomUUID().toString() + "_" + image.getOriginalFilename();
-            String imagePath = fileUtil.saveImage(image, imageName);
-            
             // 기존 이미지 찾기 및 삭제
             user.getUserImages().stream()
                     .filter(img -> img.getFacialExpression() == expression)
@@ -64,9 +67,17 @@ public class UserImageService {
                         }
                     });
             
+            // 파이썬 API를 사용하여 얼굴 인식 및 크롭 처리
+            String imagePath = faceAlignService.alignAndCropFace(image, expression);
+            
+            // 파일 이름 추출
+            String imageName = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+            
             // 사용자에게 이미지 업데이트
             user.changeFaceImage(imageName, imagePath, expression);
+            log.info("사용자 {} 얼굴 이미지({}) 업데이트 완료", loginId, expression);
         } catch (IOException e) {
+            log.error("이미지 업데이트 실패: {}", e.getMessage(), e);
             throw new RuntimeException("이미지 업데이트 실패: " + e.getMessage());
         }
     }
@@ -83,7 +94,9 @@ public class UserImageService {
                     try {
                         fileUtil.deleteImage(img.getImagePath());
                         user.getUserImages().remove(img);
+                        log.info("사용자 {} 얼굴 이미지({}) 삭제 완료", loginId, expression);
                     } catch (IOException e) {
+                        log.error("이미지 삭제 실패: {}", e.getMessage(), e);
                         throw new RuntimeException("이미지 삭제 실패: " + e.getMessage());
                     }
                 });
