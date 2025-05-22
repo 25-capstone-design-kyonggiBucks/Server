@@ -5,5 +5,5 @@ INSERT INTO book (title, book_type, image_path, image_name, summary) VALUES
 시간이 흐를수록 달라지는 소년의 모습과 변함없이 주는 나무의 마음, 그 따뜻한 이야기 속으로 함께 떠나볼까요?');
 
 INSERT INTO video (book_id, video_type, video_path, video_name) VALUES
-(4,'DEFAULT','/uploads/videos/default/axe.mp4','axe.mp4'),
-(5,'DEFAULT','/uploads/videos/default/The_giving_tree.mp4','The_giving_tree.mp4');
+(bookId,'DEFAULT','/uploads/videos/default/axe.mp4','axe.mp4'),
+(bookId,'DEFAULT','/uploads/videos/default/The_giving_tree.mp4','The_giving_tree.mp4');
