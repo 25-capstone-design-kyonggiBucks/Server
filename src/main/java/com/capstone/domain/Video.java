@@ -39,9 +39,6 @@ public class Video {
     private String videoName;
 
 
-    public static Video of(Book book,String videoPath,String videoName,Voice voice) {
-        return Video.of(book,null,videoPath,videoName,VideoType.DEFAULT,voice);
-    }
 
     private static Video of(Book book,User user, String videoPath,String videoName,VideoType videoType,Voice voice) {
         Video video = new Video();

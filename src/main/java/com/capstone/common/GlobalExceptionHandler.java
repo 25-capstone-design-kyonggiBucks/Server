@@ -1,9 +1,6 @@
 package com.capstone.common;
 
-import com.capstone.exception.BadRequestException;
-import com.capstone.exception.DuplicateUserException;
-import com.capstone.exception.InvalidLoginFormatException;
-import com.capstone.exception.InvalidPasswordException;
+import com.capstone.exception.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +15,7 @@ import java.io.IOException;
 public class GlobalExceptionHandler {
 
 
-    @ExceptionHandler(Exception.class)
+    /*@ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ApiResponse<Object> data = ApiResponse.builder()
@@ -29,7 +26,7 @@ public class GlobalExceptionHandler {
         ex.printStackTrace();
         return ResponseEntity.status(status)
                 .body(data);
-    }
+    }*/
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<?>> handleBadRequestException(Exception ex) {
@@ -88,6 +85,31 @@ public class GlobalExceptionHandler {
         }
 
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+    @ExceptionHandler(EmotionImageNotFoundInDatabaseException.class)
+    public ResponseEntity<ApiResponse<?>> handleImageNotFoundInDatabaseException(Exception ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ApiResponse<Object> data = ApiResponse.builder()
+                .success(false)
+                .status(status)
+                .message(ex.getMessage())
+                .build();
+        ex.printStackTrace();
+        return ResponseEntity.status(status)
+                .body(data);
+    }
+
+    @ExceptionHandler(EmotionImageFileNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleImageNotFoundInFileException(Exception ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ApiResponse<Object> data = ApiResponse.builder()
+                .success(false)
+                .status(status)
+                .message(ex.getMessage())
+                .build();
+        ex.printStackTrace();
+        return ResponseEntity.status(status)
+                .body(data);
     }
 
 }

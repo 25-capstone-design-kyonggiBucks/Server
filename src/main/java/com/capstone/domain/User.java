@@ -105,18 +105,4 @@ public class User {
             throw new IllegalStateException("[ERROR] 음성 파일 삭제에 실패했습니다.");
         }
     }
-
-    /*
-    * 사용자 custom 동영상은 동화당 최대 1개씩 저장할 수 있다.
-    * */
-//    public void addCustomVideo(Book book,Video customVideo) {
-//        Optional<Video> existCustomVideo = videos.stream().filter(v -> v.getBook().getBookId().equals(book.getBookId())).findAny();
-//
-//        if(existCustomVideo.isPresent()) {
-//            videos.remove(existCustomVideo.get());
-//            throw new IllegalStateException("[ERROR] 기존의 custom video 삭제에 실패했습니다.");
-//        }
-//        customVideo.setUser(this);
-//        videos.add(customVideo);
-//    }
 }

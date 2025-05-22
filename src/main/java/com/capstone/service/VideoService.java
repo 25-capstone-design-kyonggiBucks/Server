@@ -40,28 +40,16 @@ public class VideoService {
     private String UPLOADDIR;
 
 
-
-    /*public void createCustomVideo(Long userId,Long bookId,VideoType videoType,Voice voice) {
+    public void createCustomVideoWithDefaultVoice(Long userId,Long bookId,VideoType videoType,Voice voice) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("[ERROR] 유저를 찾을 수 없습니다."));
 
         // 표정 이미지 조회
         List<UserImageResponse> userImages = userImageService.getUserImages(user.getLoginId());
-        userImageService.ValidateAllEmotionImagesExist(userImages);
-
-        // 오디오 조회
-        List<AudioDto> userAudios = audioService.getAllAudios(user.getLoginId());
+        userImageService.ValidateAllEmotionImagesExistInDB(userImages);
+        userImageService.validateRequiredEmotionExistInFileSystem(userImages);
 
 
-
-
-        // api 요청
-        RestClient restClient = RestClient.create();
-        restClient.post()
-                .uri("url")
-                .contentType(MediaType.APPLICATION_JSON);
-
-
-    }*/
+    }
 
     public Resource getDefaultVideo(Long bookId,VideoType videoType) throws FileNotFoundException {
         if(videoType ==VideoType.CUSTOM)
@@ -71,10 +59,11 @@ public class VideoService {
                 .orElseThrow(() -> new IllegalStateException("[ERROR] default video를 찾지 못했습니다."));
         return loadVideoResource(video.getVideoPath(),video.getVideoName());
     }
-    public Resource getCustomVideo(Long userId,Long bookId, VideoType videoType) throws FileNotFoundException {
+
+    public Resource getCustomVideo(Long userId,Long bookId, VideoType videoType,Voice voice) throws FileNotFoundException {
         if(videoType==VideoType.DEFAULT)
             throw new IllegalArgumentException("[ERROR] videoType이 default입니다.");
-        Video video = videoRepository.findCustomVideo(userId, bookId, videoType)
+        Video video = videoRepository.findCustomVideo(userId, bookId, videoType,voice)
                 .orElseThrow(() -> new IllegalStateException("[ERROR] cusome video를 찾지 못했습니다."));
         return loadVideoResource(video.getVideoPath(),video.getVideoName());
     }
