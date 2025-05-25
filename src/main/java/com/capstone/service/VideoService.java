@@ -9,6 +9,7 @@ import com.capstone.repository.BookRepository;
 import com.capstone.repository.UserRepository;
 import com.capstone.repository.VideoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VideoService {
@@ -117,7 +119,9 @@ public class VideoService {
         if(videoType==VideoType.DEFAULT)
             throw new IllegalArgumentException("[ERROR] videoType이 default입니다.");
         Video video = videoRepository.findCustomVideo(userId, bookId, videoType,voice)
-                .orElseThrow(() -> new IllegalStateException("[ERROR] cusome video를 찾지 못했습니다."));
+                .orElseThrow(() -> new IllegalStateException("[ERROR] custom video를 찾지 못했습니다."));
+        log.info("videoUrl: {}, videoType: {}, voiceType: {}",video.getVideoPath(),video.getVideoType(),video.getVoice());
+
         return loadVideoResource(video.getVideoPath(),video.getVideoName());
     }
     public ResourceRegion getVideoRegion(Resource video, HttpHeaders headers) throws IOException {

@@ -17,7 +17,7 @@ import java.io.IOException;
 public class GlobalExceptionHandler {
 
 
-    /*@ExceptionHandler(Exception.class)
+    @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ApiResponse<Object> data = ApiResponse.builder()
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
         ex.printStackTrace();
         return ResponseEntity.status(status)
                 .body(data);
-    }*/
+    }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<?>> handleBadRequestException(Exception ex) {
