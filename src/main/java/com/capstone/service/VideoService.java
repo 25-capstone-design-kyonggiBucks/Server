@@ -1,12 +1,11 @@
 package com.capstone.service;
 
-import com.capstone.domain.User;
-import com.capstone.domain.Video;
-import com.capstone.domain.VideoType;
-import com.capstone.domain.Voice;
+import com.capstone.domain.*;
 import com.capstone.dto.AudioDto;
 import com.capstone.dto.request.CreateCustomVideoRequest;
+import com.capstone.dto.response.CreateCustomVideoResponse;
 import com.capstone.dto.response.UserImageResponse;
+import com.capstone.repository.BookRepository;
 import com.capstone.repository.UserRepository;
 import com.capstone.repository.VideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,38 +15,92 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRange;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class VideoService {
 
     private final VideoRepository videoRepository;
+    private final BookRepository bookRepository;
     private final UserImageService userImageService;
     private final AudioService audioService;
     private final UserRepository userRepository;
 
+    private final RestClient restClient;
+
     @Value("${app.upload.video}")
     private String UPLOADDIR;
 
+    @Value("${app.python-server.url:http://localhost:5001}")
+    private String pythonServerUrl;
 
-    public void createCustomVideoWithDefaultVoice(Long userId,Long bookId,VideoType videoType,Voice voice) {
+    @Value("${app.upload.customVideo}")
+    private String customVideoUploadPath;
+
+
+    /* title
+    * '금도끼 은도끼'
+    * '아낌없이 주는 나무'
+    * */
+    @Transactional
+    public void createCustomVideoWithDefaultVoice(Long userId,Long bookId) {
+
+        String pythonUrl = pythonServerUrl + "/api/custom_video";
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("[ERROR] 유저를 찾을 수 없습니다."));
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalStateException("[ERROR] 도서를 찾을 수 없습니다."));
 
-        // 표정 이미지 조회
+        // 표정 이미지 조회 및 유효성 검사
         List<UserImageResponse> userImages = userImageService.getUserImages(user.getLoginId());
         userImageService.ValidateAllEmotionImagesExistInDB(userImages);
         userImageService.validateRequiredEmotionExistInFileSystem(userImages);
 
+        Map<FacialExpression, String > expressionUrlMap = userImages.stream()
+                .collect(Collectors.toMap(
+                        UserImageResponse::expression,
+                        UserImageResponse::imagePath
+                ));
+
+        CreateCustomVideoRequest createCustomVideoRequest = CreateCustomVideoRequest.forDefaultVoice(expressionUrlMap,book.getTitle());
+
+        CreateCustomVideoResponse responseDto = restClient.post()
+                .uri(pythonUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createCustomVideoRequest)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, ((request, response) -> {
+                    String errorBody = response.getBody().toString();
+                    throw new IllegalStateException(errorBody);
+                }))
+                .body(CreateCustomVideoResponse.class);
+
+
+        Optional<Video> customVideo = videoRepository.findCustomVideo(userId, bookId, VideoType.CUSTOM, Voice.DEFAULT);
+
+        if(customVideo.isPresent()) { // 기존에 커스텀 동영상이 존재할경우
+            customVideo.get().changePath(responseDto.videoURL(),responseDto.videoName());
+
+        }else {
+            // db 저장
+            Video video = Video.of(book, user, responseDto.videoURL(), responseDto.videoName(), VideoType.CUSTOM, Voice.DEFAULT);
+            videoRepository.save(video);
+        }
 
     }
 

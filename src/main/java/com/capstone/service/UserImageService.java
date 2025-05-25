@@ -10,6 +10,7 @@ import com.capstone.repository.UserRepository;
 import com.capstone.util.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,9 @@ public class UserImageService {
     private final UserRepository userRepository;
     private final FileUtil fileUtil;
     private final FaceAlignService faceAlignService;
+
+    @Value("${app.upload.dir}")
+    private String rootDir;
 
     @Transactional
     public void uploadImage(String loginId, MultipartFile image, FacialExpression expression) {
@@ -137,10 +142,13 @@ public class UserImageService {
         List<FacialExpression> missing = new ArrayList<>();
 
         for (UserImageResponse image : images) {
-            String path = image.imagePath();
+            String imagePath = image.imagePath();
+            imagePath = imagePath.substring(1);
+
+            Path path = Paths.get(rootDir,imagePath);
             FacialExpression expression = image.expression();
 
-            if(!Files.exists(Path.of(path))) {
+            if(!Files.exists(path)) {
                 missing.add(image.expression());
             }
         }

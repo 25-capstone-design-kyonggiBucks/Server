@@ -22,7 +22,7 @@ spring:
     init:
       mode: never
       data-locations: classpath:data.sql
-      
+
   servlet:
     multipart:
       max-file-size: 10MB
@@ -41,13 +41,14 @@ security:
   jwt:
     token:
       secret-key: authlakdjfalskdfjlaksdfjlkasdnfalskdfnlakqwiuerbwqieufbasidubf
-      expire-length : 7200
+      expire-length : 7200000000000
 
 app:
   upload:
     dir: ${user.home}/Desktop
     image: ${user.home}/Desktop/uploads/images
     video: ${user.home}/Desktop/uploads/videos
+    customVideo : ${user.home}/Desktop/uploads/videos/custom
     audio: ${user.home}/Desktop/uploads/audios
   python-server:
     url: http://localhost:5001  # 파이썬 서버 URL (필요시 변경)

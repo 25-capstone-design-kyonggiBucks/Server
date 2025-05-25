@@ -6,9 +6,7 @@ import com.capstone.domain.Voice;
 import java.time.LocalDateTime;
 
 public record CreateCustomVideoResponse(
-/*
         String videoName,
-        String videoURL,
-        LocalDateTime createdAt*/
+        String videoURL
 ) {
 }

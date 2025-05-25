@@ -6,6 +6,14 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Table(
+        name = "video",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "unique_constraints",
+                        columnNames = {"user_id", "book_id", "video_type","voice"})
+        }
+)
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -38,9 +46,7 @@ public class Video {
     @Column(nullable = false)
     private String videoName;
 
-
-
-    private static Video of(Book book,User user, String videoPath,String videoName,VideoType videoType,Voice voice) {
+    public static Video of(Book book,User user, String videoPath,String videoName,VideoType videoType,Voice voice) {
         Video video = new Video();
         video.book = book;
         video.user = user;
@@ -52,6 +58,11 @@ public class Video {
     }
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void changePath(String videoPath,String videoName) {
+        this.videoPath = videoPath;
+        this.videoName = videoName;
     }
 
 }
