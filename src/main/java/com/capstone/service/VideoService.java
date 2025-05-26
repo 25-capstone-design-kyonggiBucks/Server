@@ -5,6 +5,8 @@ import com.capstone.dto.AudioDto;
 import com.capstone.dto.request.CreateCustomVideoRequest;
 import com.capstone.dto.response.CreateCustomVideoResponse;
 import com.capstone.dto.response.UserImageResponse;
+import com.capstone.exception.VideoFileNotFoundException;
+import com.capstone.exception.VideoNotFoundInDatabaseException;
 import com.capstone.repository.BookRepository;
 import com.capstone.repository.UserRepository;
 import com.capstone.repository.VideoRepository;
@@ -63,7 +65,7 @@ public class VideoService {
     * */
     @Transactional
     public void createCustomVideoWithDefaultVoice(Long userId,Long bookId) {
-
+        // URL 경로 추후에 수정 필요
         String pythonUrl = pythonServerUrl + "/api/custom_video";
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("[ERROR] 유저를 찾을 수 없습니다."));
         Book book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalStateException("[ERROR] 도서를 찾을 수 없습니다."));
@@ -106,12 +108,66 @@ public class VideoService {
 
     }
 
+    /*
+    * 주의: audio 경로는 uploads/audios/ 이런식으로 저장돼어있음
+    * */
+
+    @Transactional
+    public void createCustomVideoWithCustomVoice(Long userId,Long bookId) {
+
+        // URL 경로 추후에 수정 필요
+        String pythonUrl = pythonServerUrl + "/api/custom_video";
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("[ERROR] 유저를 찾을 수 없습니다."));
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalStateException("[ERROR] 도서를 찾을 수 없습니다."));
+
+        // 표정 이미지 조회 및 유효성 검사
+        List<UserImageResponse> userImages = userImageService.getUserImages(user.getLoginId());
+        userImageService.ValidateAllEmotionImagesExistInDB(userImages);
+        userImageService.validateRequiredEmotionExistInFileSystem(userImages);
+
+        // 오디오 조회 및 유효성 검사
+        AudioDto audioDto = audioService.getLastAudio(userId, AudioType.DEFAULT);
+        audioService.validateAudioInFile(audioDto);
+
+
+
+        Map<FacialExpression, String > expressionUrlMap = userImages.stream()
+                .collect(Collectors.toMap(
+                        UserImageResponse::expression,
+                        UserImageResponse::imagePath
+                ));
+
+        CreateCustomVideoRequest createCustomVideoRequest = CreateCustomVideoRequest.forCustomVoice(expressionUrlMap, book.getTitle(), audioDto.getAudioPath());
+
+        CreateCustomVideoResponse responseDto = restClient.post()
+                .uri(pythonUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(createCustomVideoRequest)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, ((request, response) -> {
+                    String errorBody = response.getBody().toString();
+                    throw new IllegalStateException(errorBody);
+                }))
+                .body(CreateCustomVideoResponse.class);
+
+        Optional<Video> customVideo = videoRepository.findCustomVideo(userId, bookId, VideoType.CUSTOM, Voice.CUSTOM);
+
+        if(customVideo.isPresent()) { // 기존에 커스텀 동영상이 존재할경우
+            customVideo.get().changePath(responseDto.videoURL(),responseDto.videoName());
+
+        }else {
+            // db 저장
+            Video video = Video.of(book, user, responseDto.videoURL(), responseDto.videoName(), VideoType.CUSTOM, Voice.CUSTOM);
+            videoRepository.save(video);
+        }
+    }
+
     public Resource getDefaultVideo(Long bookId,VideoType videoType) throws FileNotFoundException {
         if(videoType ==VideoType.CUSTOM)
             throw new IllegalArgumentException("[ERROR] videoType이 custom입니다.");
 
         Video video = videoRepository.findDefaultVideo(bookId, videoType)
-                .orElseThrow(() -> new IllegalStateException("[ERROR] default video를 찾지 못했습니다."));
+                .orElseThrow(() -> new VideoNotFoundInDatabaseException("[ERROR] default video를 찾지 못했습니다."));
         return loadVideoResource(video.getVideoPath(),video.getVideoName());
     }
 
@@ -119,8 +175,8 @@ public class VideoService {
         if(videoType==VideoType.DEFAULT)
             throw new IllegalArgumentException("[ERROR] videoType이 default입니다.");
         Video video = videoRepository.findCustomVideo(userId, bookId, videoType,voice)
-                .orElseThrow(() -> new IllegalStateException("[ERROR] custom video를 찾지 못했습니다."));
-        log.info("videoUrl: {}, videoType: {}, voiceType: {}",video.getVideoPath(),video.getVideoType(),video.getVoice());
+                .orElseThrow(() -> new VideoNotFoundInDatabaseException("[ERROR] custom video를 찾지 못했습니다."));
+        log.info("videoId: {}, videoUrl: {}, videoType: {}, voiceType: {}",video.getVideoId(),video.getVideoPath(),video.getVideoType(),video.getVoice());
 
         return loadVideoResource(video.getVideoPath(),video.getVideoName());
     }
@@ -145,7 +201,7 @@ public class VideoService {
         Path cleanRelative = commonPrefix.relativize(relative);
         Path path = base.resolve(cleanRelative).normalize();
         if (!Files.exists(path)) {
-            throw new FileNotFoundException("Video not found: " + path);
+            throw new VideoFileNotFoundException("Video not found: " + path);
         }
         return new FileSystemResource(path.toFile());
     }

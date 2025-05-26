@@ -4,6 +4,8 @@ import com.capstone.domain.Audio;
 import com.capstone.domain.AudioType;
 import com.capstone.domain.User;
 import com.capstone.dto.AudioDto;
+import com.capstone.exception.AudioFileNotFoundException;
+import com.capstone.exception.AudioNotFoundInDatabaseException;
 import com.capstone.repository.AudioRepository;
 import com.capstone.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +77,17 @@ public class AudioService {
         
         return AudioDto.from(audio);
     }
+
+    /*
+    * 음성 저장시 AudioType은 DEFAULT로 고정
+    * */
+    @Transactional(readOnly = true)
+    public AudioDto getLastAudio(Long userId, AudioType audioType) {
+        Audio audio = audioRepository.findLatestAudio(userId, audioType)
+                .orElseThrow(() -> new AudioNotFoundInDatabaseException("[ERROR] 음성이 존재하지 않습니다."));
+        return AudioDto.from(audio);
+    }
+
 
     public AudioDto updateAudio(String loginId, Long audioId, MultipartFile audioFile, String description) {
         User user = findUserByLoginId(loginId);
@@ -160,4 +173,12 @@ public class AudioService {
             throw new IllegalStateException("[ERROR] 파일 삭제에 실패했습니다: " + ex.getMessage());
         }
     }
+    public void validateAudioInFile(AudioDto audioDto) {
+        Path path = Paths.get(baseUploadDir,audioDto.getAudioPath());
+
+        if(!Files.exists(path)) {
+            throw new AudioFileNotFoundException("[ERROR] audio 파일이 존재하지 않습니다.");
+        }
+    }
+
 } 

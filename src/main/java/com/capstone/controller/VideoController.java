@@ -60,6 +60,7 @@ public class VideoController {
         if(voiceRequest.voice()==Voice.DEFAULT) {
             videoService.createCustomVideoWithDefaultVoice(userPrincipal.getUserId(),bookId);
         }else if(voiceRequest.voice()==Voice.CUSTOM) {
+            videoService.createCustomVideoWithCustomVoice(userPrincipal.getUserId(),bookId);
 
         }else
             throw new BadRequestException("[ERROR] voice type이 올바르지 않습니다.");

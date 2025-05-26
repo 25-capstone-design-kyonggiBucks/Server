@@ -114,6 +114,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status)
                 .body(data);
     }
+    @ExceptionHandler({VideoNotFoundInDatabaseException.class, AudioNotFoundInDatabaseException.class})
+    public ResponseEntity<?> handleVideoNotFoundInDatabaseException(Exception ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ApiResponse<Object> data = ApiResponse.builder()
+                .success(false)
+                .status(status)
+                .message(ex.getMessage())
+                .build();
+        ex.printStackTrace();
+        return ResponseEntity.status(status)
+                .body(data);
+    }
+    @ExceptionHandler({VideoFileNotFoundException.class,AudioFileNotFoundException.class})
+    public ResponseEntity<?> handleVideoFileNotFoundException(Exception ex) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ApiResponse<Object> data = ApiResponse.builder()
+                .success(false)
+                .status(status)
+                .message(ex.getMessage())
+                .build();
+        ex.printStackTrace();
+        return ResponseEntity.status(status)
+                .body(data);
+    }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
