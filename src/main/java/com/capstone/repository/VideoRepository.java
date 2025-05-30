@@ -15,13 +15,13 @@ import java.util.Optional;
 public interface VideoRepository extends JpaRepository<Video,Long> {
 
 
-    @Query("""
+   /* @Query("""
     SELECT v FROM Video v
     WHERE v.book.bookId = :bookId 
       AND v.videoType = :type 
       AND v.user.userId = :userId
 """)
-    Optional<Video> findCustomVideo(@Param("userId") Long userId,@Param("bookId") Long bookId,@Param("type") VideoType type);
+    Optional<Video> findCustomVideo(@Param("userId") Long userId,@Param("bookId") Long bookId,@Param("type") VideoType type);*/
 
     @Query("""
     SELECT v From Video v

@@ -2,6 +2,8 @@ package com.capstone.service;
 
 import com.capstone.domain.*;
 import com.capstone.dto.AudioDto;
+import com.capstone.dto.VideoStatusGroup;
+import com.capstone.dto.VideoVersionStatus;
 import com.capstone.dto.request.CreateCustomVideoRequest;
 import com.capstone.dto.response.CreateCustomVideoResponse;
 import com.capstone.dto.response.UserImageResponse;
@@ -10,6 +12,7 @@ import com.capstone.exception.VideoNotFoundInDatabaseException;
 import com.capstone.repository.BookRepository;
 import com.capstone.repository.UserRepository;
 import com.capstone.repository.VideoRepository;
+import io.jsonwebtoken.security.Jwks;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,14 +26,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -194,17 +195,54 @@ public class VideoService {
     }
 
     private Resource loadVideoResource(String videoPath, String videoName) throws FileNotFoundException {
+        Path path = resolveVideoPath(videoPath);
+        validateVideoFileExists(path);
+        return new FileSystemResource(path.toFile());
+    }
+    private Path resolveVideoPath(String videoPath) {
         Path base = Paths.get(UPLOADDIR).normalize();
         Path relative = Paths.get(videoPath).normalize();
 
         Path commonPrefix = Paths.get("/uploads/videos");
         Path cleanRelative = commonPrefix.relativize(relative);
         Path path = base.resolve(cleanRelative).normalize();
-        if (!Files.exists(path)) {
+        return path;
+    }
+    private void validateVideoFileExists(Path path) {
+        if (path==null || !Files.exists(path)) {
             throw new VideoFileNotFoundException("Video not found: " + path);
+
+        }if (!Files.isRegularFile(path)) {
+            throw new VideoFileNotFoundException("Path is not a file: " + path);
         }
-        return new FileSystemResource(path.toFile());
     }
 
-   // private CreateCustomVideoRequest buildCustomVideoRequest(List<UserImageResponse> userImages,List<AudioDto>)
+   public VideoStatusGroup getVideoStatusByBookId(Long userId,Long bookId) {
+       User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("[ERROR] 유저를 찾을 수 없습니다."));
+       Book book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalStateException("[ERROR] 도서를 찾을 수 없습니다."));
+       Optional<Video> defaultVoiceOpt = videoRepository.findCustomVideo(userId, bookId, VideoType.CUSTOM, Voice.DEFAULT);
+       Optional<Video> customVoiceOpt = videoRepository.findCustomVideo(userId, bookId, VideoType.CUSTOM, Voice.CUSTOM);
+
+       VideoVersionStatus defaultVoiceStatus = buildVideoStatus(defaultVoiceOpt);
+       VideoVersionStatus customVoiceStatus = buildVideoStatus(customVoiceOpt);
+
+       VideoStatusGroup videoStatusGroup = new VideoStatusGroup(defaultVoiceStatus, customVoiceStatus);
+
+       return videoStatusGroup;
+
+   }
+
+   private VideoVersionStatus buildVideoStatus(Optional<Video> videoOpt) {
+        if(videoOpt.isPresent()) {
+            boolean fileExists = fileExistsSafely(videoOpt.get().getVideoPath());
+            return new VideoVersionStatus(true,fileExists,fileExists);
+        }else
+            return new VideoVersionStatus(false,false,false);
+   }
+   private boolean fileExistsSafely(String videoPath) {
+       if(videoPath == null)
+           return false;
+       Path path = resolveVideoPath(videoPath);
+       return Files.exists(path) && Files.isRegularFile(path);
+   }
 }
