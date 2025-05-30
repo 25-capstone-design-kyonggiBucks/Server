@@ -226,7 +226,7 @@ public class VideoService {
        VideoVersionStatus defaultVoiceStatus = buildVideoStatus(defaultVoiceOpt);
        VideoVersionStatus customVoiceStatus = buildVideoStatus(customVoiceOpt);
 
-       VideoStatusGroup videoStatusGroup = new VideoStatusGroup(defaultVoiceStatus, customVoiceStatus);
+       VideoStatusGroup videoStatusGroup = new VideoStatusGroup(bookId,defaultVoiceStatus, customVoiceStatus);
 
        return videoStatusGroup;
 
